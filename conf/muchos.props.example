@@ -116,6 +116,10 @@ subnet = subnet1
 subnet_cidr = 10.1.0.0/16
 #Optional. If set to True, will create multiple VMSS based on multiple_vmss_vars.yml
 use_multiple_vmss = False
+# Priority for VMs within VMSS. Can be set to either Regular or Low.
+# Note that for multiple-VMSS deployments, this setting should be defined
+# in the conf/azure_multiple_vmss_vars.yml file.
+vmss_priority = Regular
 # Azure image reference defined as a pipe-delimited string in the format offer|publisher|sku|version|
 # Please refer 'Launching an Azure cluster' section of the README before making changes
 azure_image_reference = CentOS|OpenLogic|7.5|latest|
