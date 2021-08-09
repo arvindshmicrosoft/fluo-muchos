@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,10 +15,5 @@
 # limitations under the License.
 #
 
-
-export SPARK_DIST_CLASSPATH=$({{ hadoop_home }}/bin/hadoop classpath)
-export HADOOP_CONF_DIR={{ hadoop_home }}/etc/hadoop
-export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
-export PLATFORM_VERSION=2.11_spark2.4
-export DATAGEN_VERSION=0.4.0-SNAPSHOT
-export SPARK_APPLICATION_MAIN_CLASS=ldbc.snb.datagen.spark.LdbcDatagen
+- name: "start spark master"
+  command: "{{ spark_home }}/sbin/start-master.sh"

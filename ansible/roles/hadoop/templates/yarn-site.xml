@@ -84,7 +84,7 @@
   {% endif %}
   <property>
     <name>yarn.log.server.url</name>
-    <value>http://{{ groups['resourcemanager'][0] }}:19888/jobhistory/logs</value>
+    <value>http://{{ groups['resourcemanager'][0] | default('notconfigured') }}:19888/jobhistory/logs</value>
   </property>
   <property>
     <name>yarn.log-aggregation-enable</name>
@@ -96,7 +96,7 @@
   </property>
   <property>
     <name>yarn.log.server.web-service.url</name>
-    <value>http://{{ groups['resourcemanager'][0] }}:8188/ws/v1/applicationhistory</value>
+    <value>http://{{ groups['resourcemanager'][0] | default('notconfigured') }}:8188/ws/v1/applicationhistory</value>
   </property>
   <property>
     <name>yarn.nodemanager.log-aggregation.compression-type</name>
@@ -227,13 +227,46 @@
 
   <property>
     <name>yarn.resourcemanager.webapp.address</name>
-    <value>{{ groups['resourcemanager'][0] }}:8088</value>
+    <value>{{ groups['resourcemanager'][0] | default('notconfigured') }}:8088</value>
   </property>
 
   <property>
     <name>yarn.resourcemanager.hostname</name>
-    <value>{{ groups['resourcemanager'][0] }}</value>
+    <value>{{ groups['resourcemanager'][0] | default('notconfigured') }}</value>
   </property>
 {% endif %}
+
+
+  <property>
+    <name>yarn.nodemanager.localizer.cache.cleanup.interval-ms</name>
+    <value>60000</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.localizer.cache.target-size-mb</name>
+    <value>3000</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>3250</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value>3250</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.minimum-allocation-vcores</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.maximum-allocation-vcores</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>4</value>
+  </property>
+
 
 </configuration>

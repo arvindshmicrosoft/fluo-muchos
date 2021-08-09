@@ -83,7 +83,8 @@ _HOST_VAR_DEFAULTS = {
     "hadoop_tarball": "hadoop-{{ hadoop_version }}.tar.gz",
     "hadoop_version": None,
     "hadoop_major_version": "{{ hadoop_version.split('.')[0] }}",
-    "hdfs_root": "hdfs://{{ nameservice_id }}",
+    #"hdfs_root": "hdfs://{{ nameservice_id }}",
+    "hdfs_root": "{{ instance_volumes_adls }}",
     "nameservice_id": None,
     "num_tservers": 1,
     "install_dir": None,
@@ -251,13 +252,13 @@ class BaseConfig(ConfigParser, metaclass=ABCMeta):
     # helper for verify_config to call for common checks
     def _verify_config(self, action):
         if action in ["launch", "setup"]:
-            for service in SERVICES:
-                if service not in OPTIONAL_SERVICES:
-                    if not self.has_service(service):
-                        exit(
-                            "ERROR - Missing '{0}' service from [nodes] "
-                            "section of muchos.props".format(service)
-                        )
+            # for service in SERVICES:
+            #     if service not in OPTIONAL_SERVICES:
+            #         if not self.has_service(service):
+            #             exit(
+            #                 "ERROR - Missing '{0}' service from [nodes] "
+            #                 "section of muchos.props".format(service)
+            #             )
 
             # fail if we are using Java 11 along with Accumulo 1.x
             # See https://github.com/apache/accumulo/issues/958 for details

@@ -25,3 +25,7 @@
 - hosts: spark
   tasks:
     - import_tasks: roles/spark/tasks/start-spark-history.yml
+    - import_tasks: roles/spark/tasks/start-spark-master.yml
+- hosts: workers
+  tasks:
+    - import_tasks: roles/spark/tasks/start-spark-slave.yml

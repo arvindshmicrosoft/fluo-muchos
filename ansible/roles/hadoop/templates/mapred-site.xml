@@ -62,11 +62,11 @@
 {% endif %}
   <property>
     <name>mapreduce.jobhistory.address</name>
-    <value>{{ groups['resourcemanager'][0] }}:10020</value>
+    <value>{{ groups['resourcemanager'][0] | default('notconfigured') }}:10020</value>
   </property>
   <property>
     <name>mapreduce.jobhistory.webapp.address</name>
-    <value>{{ groups['resourcemanager'][0] }}:19888</value>
+    <value>{{ groups['resourcemanager'][0] | default('notconfigured') }}:19888</value>
   </property>
   <property>
     <name>mapreduce.jobhistory.done-dir</name>
@@ -92,4 +92,21 @@
     <name>mapreduce.jobhistory.recovery.store.leveldb.path</name>
     <value>{{ worker_data_dirs[0] }}/hadoop/mapreduce/jhs</value>
   </property>  
+
+  <property>
+    <name>mapreduce.map.memory.mb</name>
+    <value>3250</value>
+  </property>
+  <property>
+    <name>mapreduce.map.java.opts</name>
+    <value>-Xmx2600m</value>
+  </property>
+  <property>
+    <name>mapreduce.reduce.memory.mb</name>
+    <value>3250</value>
+  </property>
+  <property>
+    <name>mapreduce.reduce.java.opts</name>
+    <value>-Xmx2600m</value>
+  </property>
 </configuration>

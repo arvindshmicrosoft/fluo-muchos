@@ -60,3 +60,34 @@
        export HADOOP_OPTIONAL_TOOLS=hadoop-azure
        export HADOOP_OPTS="-Dorg.wildfly.openssl.path=/usr/lib64 ${HADOOP_OPTS}"
   when: cluster_type == 'azure' and hadoop_major_version == '3' and use_adlsg2
+
+- name: Configure Namenode & Datanode JVM parameters for Hadoop 3.x
+  blockinfile:
+    path: "{{ hadoop_home }}/etc/hadoop/hadoop-env.sh"
+    marker: "# {mark}"
+    marker_begin: "Begin Hadoop JVM configurations"
+    marker_end: "End Hadoop JVM configurations"
+    block: |
+       export HDFS_NAMENODE_OPTS="{{ hadoop_gc_settings }} {{ hadoop_namenode_heap }}"
+       export HDFS_DATANODE_OPTS="{{ hadoop_gc_settings }} {{ hadoop_datanode_heap }}"
+       export HDFS_JOURNALNODE_OPTS="{{ hadoop_gc_settings }} {{ hadoop_journal_heap }}"
+       export HDFS_ZKFC_OPTS="{{ hadoop_gc_settings }} {{ hadoop_zkfc_heap }}"
+  when: hadoop_major_version == '3'
+
+- name: Configure Resourcemanager & Nodemanager JVM parameters for Hadoop 2.x & 3.x
+  blockinfile:
+    path: "{{ hadoop_home }}/etc/hadoop/yarn-env.sh"
+    marker: "# {mark}"
+    marker_begin: "Begin YARN JVM configurations"
+    marker_end: "End YARN JVM configurations"
+    block: |
+       export YARN_RESOURCEMANAGER_OPTS="{{ hadoop_gc_settings }} {{ yarn_rm_heap }}"
+       export YARN_NODEMANAGER_OPTS="{{ hadoop_gc_settings }} {{ yarn_nm_heap }}"
+
+- name: Configure MapReduce Job History Server for Hadoop 3.x
+  replace:
+    path: "{{ hadoop_home }}/etc/hadoop/mapred-env.sh"
+    regexp: '.*export\s+MAPRED_HISTORYSERVER_OPTS.*'
+    replace: "export MAPRED_HISTORYSERVER_OPTS=\"{{ hadoop_gc_settings }} {{ mapred_jhs_heap }}\""
+  when: hadoop_major_version == '3'
+

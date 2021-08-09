@@ -55,7 +55,7 @@ class ExistingCluster:
         ) as site_file:
             print("- import_playbook: common.yml", file=site_file)
 
-            print("- import_playbook: zookeeper.yml", file=site_file)
+            # print("- import_playbook: zookeeper.yml", file=site_file)
             print("- import_playbook: hadoop.yml", file=site_file)
 
             if config.has_service("spark"):
@@ -63,7 +63,7 @@ class ExistingCluster:
 
             if config.has_service("metrics"):
                 print("- import_playbook: metrics.yml", file=site_file)
-            print("- import_playbook: accumulo.yml", file=site_file)
+            # print("- import_playbook: accumulo.yml", file=site_file)
             if config.has_service("fluo"):
                 print("- import_playbook: fluo.yml", file=site_file)
             if config.has_service("fluo_yarn"):
