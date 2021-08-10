@@ -69,5 +69,13 @@
     <name>fs.azure.identity.transformer.service.principal.id</name>
     <value>{{ principal_id }}</value>
   </property>
+  <property>
+    <name>fs.azure.write.max.concurrent.requests</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>fs.azure.write.max.requests.to.queue</name>
+    <value>2</value>
+  </property>
 {% endif %}
 </configuration>

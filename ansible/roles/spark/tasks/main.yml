@@ -31,3 +31,6 @@
 - name: "Copy Curator JARs"
   synchronize: src={{ user_home }}/mvn_dep_curator/ dest={{ spark_home }}/jars/
   when: "'spark' in groups"
+
+- name: "create spark-temp directory on all hosts"
+  file: path="/mnt/resource/spark-temp/" state=directory owner={{ cluster_user }} group={{ cluster_group }}
