@@ -54,7 +54,7 @@
 
 - name: Generate names for Storage Accounts
   set_fact:
-     InstanceVolumesAuto: "{{ InstanceVolumesAuto + ['abfss://'+'accumulodata'+'@'+StorageAccountName+item+'.'+InstanceVolumesTemp[1]+'/accumulo'] }}"
+     InstanceVolumesAuto: "{{ InstanceVolumesAuto + ['abfss://'+'accumulodata'+'@'+StorageAccountName+item+'.'+InstanceVolumesTemp[1]] }}"
   with_sequence: start=1 end={{ InstanceVolumesEndSequence|int }}
   when: InstanceVolumesTemp[0]|int != 0
 

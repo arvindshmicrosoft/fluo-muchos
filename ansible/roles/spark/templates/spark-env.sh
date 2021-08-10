@@ -23,3 +23,4 @@ export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
 export PLATFORM_VERSION=2.11_spark2.4
 export DATAGEN_VERSION=0.4.0-SNAPSHOT
 export SPARK_APPLICATION_MAIN_CLASS=ldbc.snb.datagen.spark.LdbcDatagen
+export SPARK_DAEMON_JAVA_OPTS="-Dspark.deploy.recoveryMode=ZOOKEEPER  -Dspark.deploy.zookeeper.url={{ zookeeper_connect }}"

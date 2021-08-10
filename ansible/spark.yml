@@ -22,9 +22,11 @@
 - hosts: all:!{{ azure_proxy_host }}
   roles:
     - spark
-- hosts: spark
+- hosts: spark[0]
   tasks:
     - import_tasks: roles/spark/tasks/start-spark-history.yml
+- hosts: spark
+  tasks:
     - import_tasks: roles/spark/tasks/start-spark-master.yml
 - hosts: workers
   tasks:

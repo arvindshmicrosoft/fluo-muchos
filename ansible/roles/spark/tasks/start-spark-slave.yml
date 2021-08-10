@@ -15,5 +15,5 @@
 # limitations under the License.
 #
 
-- name: "start spark master"
-  command: "{{ spark_home }}/sbin/start-slave.sh spark://{{ groups['spark'][0]}}:7077"
+- name: "start spark workers"
+  command: "{{ spark_home }}/sbin/start-slave.sh spark://{{ groups.spark | join(':7077,') }}:'7077'"

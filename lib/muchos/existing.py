@@ -55,7 +55,7 @@ class ExistingCluster:
         ) as site_file:
             print("- import_playbook: common.yml", file=site_file)
 
-            # print("- import_playbook: zookeeper.yml", file=site_file)
+            print("- import_playbook: zookeeper.yml", file=site_file)
             print("- import_playbook: hadoop.yml", file=site_file)
 
             if config.has_service("spark"):
@@ -96,12 +96,9 @@ class ExistingCluster:
             for rm_host in config.get_service_hostnames("resourcemanager"):
                 print(rm_host, file=hosts_file)
             if config.has_service("spark"):
-                print(
-                    "\n[spark]\n{0}".format(
-                        config.get_service_hostnames("spark")[0]
-                    ),
-                    file=hosts_file,
-                )
+                print("\n[spark]", file=hosts_file)
+                for spark_host in config.get_service_hostnames("spark"):
+                    print(spark_host, file=hosts_file)
             if config.has_service("mesosmaster"):
                 print(
                     "\n[mesosmaster]\n{0}".format(

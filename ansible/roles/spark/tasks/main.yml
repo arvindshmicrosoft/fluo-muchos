@@ -26,3 +26,8 @@
 - name: "copy spark yarn shuffle jar to hadoop lib"
   command: cp {{ spark_home }}/yarn/spark-{{ spark_version }}-yarn-shuffle.jar {{ hadoop_home }}/share/hadoop/yarn/lib/ creates={{ hadoop_home }}/share/hadoop/yarn/lib/spark-{{ spark_version }}-yarn-shuffle.jar
   when: "'spark' in groups"
+
+# Older curator version is needed otherwise ZK breaks
+- name: "Copy Curator JARs"
+  synchronize: src={{ user_home }}/mvn_dep_curator/ dest={{ spark_home }}/jars/
+  when: "'spark' in groups"
