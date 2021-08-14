@@ -75,7 +75,15 @@
   </property>
   <property>
     <name>fs.azure.write.max.requests.to.queue</name>
-    <value>2</value>
+    <value>1</value>
+  </property>  
+  <property>
+    <name>fs.azure.write.request.size</name>
+    <value>1048576</value>
+  </property>
+  <property>
+    <name>fs.azure.buffered.pread.disable</name>
+    <value>true</value>
   </property>
 {% endif %}
 </configuration>

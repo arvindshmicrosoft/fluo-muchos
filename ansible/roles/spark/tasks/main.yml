@@ -32,5 +32,13 @@
   synchronize: src={{ user_home }}/mvn_dep_curator/ dest={{ spark_home }}/jars/
   when: "'spark' in groups"
 
+- name: Set /mnt/resource ownership when mount_root is not /mnt/resource
+  file:
+    path: '/mnt/resource'
+    state: directory
+    owner: "{{ cluster_user }}"
+    group: "{{ cluster_group }}"
+  when: mount_root != '/mnt/resource'
+
 - name: "create spark-temp directory on all hosts"
   file: path="/mnt/resource/spark-temp/" state=directory owner={{ cluster_user }} group={{ cluster_group }}
