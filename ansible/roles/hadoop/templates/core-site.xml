@@ -79,7 +79,7 @@
   </property>  
   <property>
     <name>fs.azure.write.request.size</name>
-    <value>1048576</value>
+    <value>2000000</value>
   </property>
   <property>
     <name>fs.azure.buffered.pread.disable</name>
