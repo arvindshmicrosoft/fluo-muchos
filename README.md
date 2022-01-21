@@ -255,6 +255,9 @@ completes. Any work that was successfully completed will not be repeated. While 
 take over a minute, use `ctrl-c` to stop setup if it hangs for a long time. Just remember to run
 `muchos setup` again to finish setup.
 
+By default, Muchos will configure a single HDFS namespace. It is possible to configure and deploy
+multiple HDFS namespaces through Muchos. See [Advanced HDFS configuration](./docs/advanced-hdfs-config.md) for details.
+
 ## Manage the cluster
 
 The `setup` command is idempotent. It can be run again on a working cluster. It will not change the
@@ -334,6 +337,8 @@ Before enabling HA, it is strongly recommended you read the Apache doc for [HDFS
 Also in the `[nodes]` section of [muchos.props] ensure the `journalnode` and `zkfc` service are configured to run.
 
 When `hdfs_ha` is `True` it also enables the ability to have HA resource managers for YARN.  To utilize this feature, specify `resourcemanager` for multiple leader nodes in the `[nodes]` section.
+
+Please see [Advanced HDFS configuration](./docs/advanced-hdfs-config.md) for more details.
 
 ## Terminating your cluster
 

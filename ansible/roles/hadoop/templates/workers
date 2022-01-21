@@ -1,3 +1,3 @@
-{% for host in groups['workers'] %}
+{% for host in hdfs_volume_mapping[nameservice_id].worker %}
 {{ host }}
 {% endfor %}

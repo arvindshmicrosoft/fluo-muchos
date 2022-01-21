@@ -16,6 +16,7 @@
 #
 
 from abc import ABCMeta, abstractmethod
+from copy import deepcopy
 from collections import ChainMap
 from configparser import ConfigParser
 from distutils.version import StrictVersion
@@ -84,16 +85,19 @@ _HOST_VAR_DEFAULTS = {
     "hadoop_version": None,
     "hadoop_major_version": "{{ hadoop_version.split('.')[0] }}",
     "hdfs_root": "hdfs://{{ nameservice_id }}",
+    "accumulo_hdfs_roots": (
+        "{% set dirs=[] %}"
+        "{% for nsid in hdfs_volume_mapping.keys() %}"
+        "{{ dirs.append('hdfs://' + nsid + '/accumulo') }}"
+        "{% endfor %}"
+        "{{ dirs | join(',') }}"
+    ),
     "nameservice_id": None,
     "num_tservers": 1,
     "install_dir": None,
     "install_hub": None,
     "java_home": "/usr/lib/jvm/java",
     "java_package": "java-1.8.0-openjdk-devel",
-    "journal_quorum": (
-        "{% for host in groups['journalnode'] %}{{ host }}"
-        ":8485{% if not loop.last %};{% endif %}{% endfor %}"
-    ),
     "maven_home": "{{ install_dir }}/apache-maven-{{ maven_version }}",
     "maven_tarball": "apache-maven-{{ maven_version }}-bin.tar.gz",
     "maven_version": "3.6.3",
@@ -106,8 +110,8 @@ _HOST_VAR_DEFAULTS = {
     "user_home": None,
     "worker_data_dirs": None,
     "zookeeper_connect": (
-        "{% for host in groups['zookeepers'] %}{{ host }}"
-        ":2181{% if not loop.last %},{% endif %}{% endfor %}"
+        "{% for host in hdfs_volume_mapping[nameservice_id].zookeeper %}"
+        "{{ host }}:2181{% if not loop.last %},{% endif %}{% endfor %}"
     ),
     "zookeeper_client_port": "2181",
     "zookeeper_basename": (
@@ -141,6 +145,12 @@ _PLAY_VAR_DEFAULTS = {
     "accumulo_imap_size": None,
     "accumulo_checksum": None,
     "accumulo_tserv_mem": None,
+    "accumulo_zk_nameservice_id": None,
+    "accumulo_zookeeper_connect": (
+        '"{% for host in all_nameservices[accumulo_zk_nameservice_id]'
+        ".zookeeper %}{{ host }}:2181{% if not loop.last %},{% endif %}"
+        '{% endfor %}"'
+    ),
     "fluo_checksum": None,
     "fluo_worker_instances_multiplier": None,
     "fluo_worker_mem_mb": None,
@@ -200,6 +210,8 @@ class BaseConfig(ConfigParser, metaclass=ABCMeta):
         self.cluster_type = self.get("general", "cluster_type")
         self.node_d = None
         self.hosts = None
+        self.hdfs_ns_d = None
+        self.hdfs_ns_mapping = None
         self.checksums_path = checksums_path
         self.checksums_d = None
         self._init_nodes()
@@ -308,6 +320,8 @@ class BaseConfig(ConfigParser, metaclass=ABCMeta):
 
     def _init_nodes(self):
         self.node_d = {}
+        self.hdfs_ns_d = {}
+        self.hdfs_ns_mapping = {}
         for (hostname, value) in self.items("nodes"):
             if hostname in self.node_d:
                 exit(
@@ -315,8 +329,28 @@ class BaseConfig(ConfigParser, metaclass=ABCMeta):
                         hostname
                     )
                 )
+
+            # check if this node has a HDFS namespace associated with it
+            # by splitting the value on whitespace
+            value_parts = value.split()
+            if len(value_parts) == 0 or len(value_parts) > 2:
+                exit(
+                    "Could not parse role assignments for hostname {0}. "
+                    "Expected format is <hostname> <comma separated list"
+                    " of roles> <optional HDFS nameservice ID>".format(
+                        hostname
+                    )
+                )
+
+            if len(value_parts) == 2:
+                hdfs_ns = value_parts[1]
+            else:
+                # if no specific HDFS namespace is defined for this node,
+                # default to the one defined under the [general] section
+                hdfs_ns = self.get("general", "nameservice_id")
+
             service_list = []
-            for service in value.split(","):
+            for service in value_parts[0].split(","):
                 if service in SERVICES:
                     service_list.append(service)
                 else:
@@ -326,6 +360,89 @@ class BaseConfig(ConfigParser, metaclass=ABCMeta):
                         )
                     )
             self.node_d[hostname] = service_list
+
+            # record the HDFS namespace for this host, except if the host
+            # is only used as a client
+            # TODO check this, and maybe we need to include client in the
+            # list of hosts to run Hadoop and Accumulo roles on?
+            if set(self.node_d[hostname]) - set(["client"]) != set():
+                self.hdfs_ns_d[hostname] = hdfs_ns
+
+        self._get_hdfs_volume_mapping()
+
+    # return a structure representing the mapping between HDFS namespace
+    # and the hosts / roles therein
+    def _get_hdfs_volume_mapping(self):
+        # this method can be called multiple times, with the population of
+        # self.hdfs_ns_mapping happening the first time around. Subsequent
+        # calls can just return the previously populated self.hdfs_ns_mapping
+        if len(self.hdfs_ns_mapping) > 0:
+            return self.hdfs_ns_mapping
+
+        distinct_hdfs_ns = list(set(self.hdfs_ns_d.values()))
+
+        self.hdfs_ns_mapping["hdfs_volume_mapping"] = {}
+        root_elem = self.hdfs_ns_mapping["hdfs_volume_mapping"]
+        for ns in distinct_hdfs_ns:
+            root_elem[ns] = {}
+
+        for (hostname, service_list) in list(self.node_d.items()):
+            if hostname in self.hdfs_ns_d:
+                for svc in service_list:
+                    if svc not in root_elem[self.hdfs_ns_d[hostname]]:
+                        root_elem[self.hdfs_ns_d[hostname]][svc] = []
+                    root_elem[self.hdfs_ns_d[hostname]][svc].append(hostname)
+
+        self.all_nameservices = deepcopy(
+            self.hdfs_ns_mapping["hdfs_volume_mapping"]
+        )
+
+        # remove any namespaces which do not have any HDFS namenode entries
+        to_delete = [
+            k for (k, v) in root_elem.items() if "namenode" not in v.keys()
+        ]
+        for k in to_delete:
+            del root_elem[k]
+
+        return self.hdfs_ns_mapping
+
+    # return the first host within each namespace which has the specified
+    # role (service) associated with them
+    def _get_primary_node_for_role(self, which_role):
+        primary_nodes = []
+
+        root_elem = self.hdfs_ns_mapping["hdfs_volume_mapping"]
+
+        for ns, members in root_elem.items():
+            if which_role in members:
+                primary_nodes.append(members[which_role][0])
+
+        return primary_nodes
+
+    # each HDFS namespace / volume will be mapped to a new host group
+    # in Ansible, thereby providing a clean way to override per-namespace
+    # variables like nameservice_id and hdfs_root
+    # to help create those inventory items later in existing.py, this helper
+    # method returns a structure with the primary set of keys being the
+    # namesservice ids.
+    def _get_unfiltered_namespace_mapping(self):
+        ansible_info = {}
+        # For getting the group_vars and host memberships to those groups,
+        # we use the unfiltered set of "name services" - even those which do
+        # not have a set of namenodes associated with them. this is important
+        # so that we can easily, declaratively, associate (let's say) a
+        # zookeeper-only "nameservice" for example
+        root_elem = self.all_nameservices
+        for ns, members in root_elem.items():
+            ansible_info[ns] = {}
+            ansible_info[ns]["group_vars"] = {}
+            ansible_info[ns]["group_vars"]["nameservice_id"] = ns
+            ansible_info[ns]["hosts"] = []
+            for host, ns_tmp in self.hdfs_ns_d.items():
+                if ns == ns_tmp:
+                    ansible_info[ns]["hosts"].append(host)
+
+        return ansible_info
 
     @abstractmethod
     @ansible_play_var
@@ -517,11 +634,11 @@ class BaseConfig(ConfigParser, metaclass=ABCMeta):
         retval.sort()
         return retval
 
-    def get_service_hostnames(self, service):
+    def get_service_hostnames(self, service, ns_id=None):
         retval = []
-        for (hostname, service_list) in list(self.node_d.items()):
-            if service in service_list:
-                retval.append(hostname)
+        for k, v in self.hdfs_ns_mapping["hdfs_volume_mapping"].items():
+            if k == (k if ns_id is None else ns_id):
+                retval += v.get(service, [])
         retval.sort()
         return retval
 

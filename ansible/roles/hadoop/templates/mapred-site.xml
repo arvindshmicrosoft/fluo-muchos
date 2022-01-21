@@ -62,11 +62,11 @@
 {% endif %}
   <property>
     <name>mapreduce.jobhistory.address</name>
-    <value>{{ groups['resourcemanager'][0] }}:10020</value>
+    <value>{{ hdfs_volume_mapping[nameservice_id].resourcemanager[0] }}:10020</value>
   </property>
   <property>
     <name>mapreduce.jobhistory.webapp.address</name>
-    <value>{{ groups['resourcemanager'][0] }}:19888</value>
+    <value>{{ hdfs_volume_mapping[nameservice_id].resourcemanager[0] }}:19888</value>
   </property>
   <property>
     <name>mapreduce.jobhistory.done-dir</name>

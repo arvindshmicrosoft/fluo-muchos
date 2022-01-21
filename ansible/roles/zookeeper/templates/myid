@@ -1,4 +1,4 @@
-{% for host in groups['zookeepers'] %}
+{% for host in all_nameservices[nameservice_id].zookeeper %}
 {% if host == inventory_hostname %}
 {{ loop.index }}
 {% endif %}

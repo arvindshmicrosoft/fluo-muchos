@@ -51,52 +51,59 @@
     <name>dfs.domain.socket.path</name>
     <value>/var/lib/hadoop-hdfs/dn_socket</value>
   </property>
+{% set curr_ns = hdfs_volume_mapping[nameservice_id] %}
   <property>
     <name>dfs.nameservices</name>
+    <value>{{ hdfs_volume_mapping.keys() | join(',') }}</value>
+  </property>
+  <property>
+    <name>dfs.internal.nameservices</name>
     <value>{{ nameservice_id }}</value>
   </property>
+{% for nsid in hdfs_volume_mapping.items() %}
+{% set nn_list = [] %}
+{% for item in nsid.1.namenode %}{{ nn_list.append('nn' + loop.index|string() ) }}{% endfor %}
 {% if not hdfs_ha %}
   <property>
-    <name>dfs.namenode.secondary.http-address.{{ nameservice_id }}</name>
-    <value>{{ groups['namenode'][0] }}:50090</value>
+    <name>dfs.namenode.secondary.http-address.{{ nsid.0 }}</name>
+    <value>{{ hdfs_volume_mapping[nsid.0].namenode[0] }}:50090</value>
   </property>
   <property>
-    <name>dfs.namenode.secondary.https-address.{{ nameservice_id }}</name>
-    <value>{{ groups['namenode'][0] }}:50091</value>
+    <name>dfs.namenode.secondary.https-address.{{ nsid.0 }}</name>
+    <value>{{ hdfs_volume_mapping[nsid.0].namenode[0] }}:50091</value>
   </property>
 {% else %}
-{% set nn_list = [] %}
-{% for item in groups['namenode'] %}{{ nn_list.append('nn' + loop.index|string() ) }}{% endfor %}
   <property>
-    <name>dfs.ha.namenodes.{{ nameservice_id }}</name>
+    <name>dfs.ha.namenodes.{{ nsid.0 }}</name>
     <value>{{ nn_list | join(',') }}</value>
   </property>
 {% endif %}
-{% for nn_host in groups['namenode'] %}{% set nn_id = 'nn' + loop.index|string() %}
+{% for nn_host in nsid.1.namenode %}{% set nn_id = 'nn' + loop.index|string() %}
 {% if hdfs_ha %}{% set nnid_suffix = '.' + nn_id %}
 {% else %}{% set nnid_suffix = '' %}
 {% endif %}
   <property>
-    <name>dfs.namenode.rpc-address.{{ nameservice_id }}{{ nnid_suffix }}</name>
+	  <name>dfs.namenode.rpc-address.{{ nsid.0 }}{{ nnid_suffix }}</name>
     <value>{{ nn_host }}:8020</value>
   </property>
   <property>
-    <name>dfs.namenode.http-address.{{ nameservice_id }}{{ nnid_suffix }}</name>
+    <name>dfs.namenode.http-address.{{ nsid.0 }}{{ nnid_suffix }}</name>
     <value>{{ nn_host }}:50070</value>
   </property>
   <property>
-    <name>dfs.namenode.https-address.{{ nameservice_id }}{{ nnid_suffix }}</name>
+    <name>dfs.namenode.https-address.{{ nsid.0 }}{{ nnid_suffix }}</name>
     <value>{{ nn_host }}:50071</value>
   </property>
 {% endfor %}
   <property>
-    <name>dfs.client.failover.proxy.provider.{{ nameservice_id }}</name>
+    <name>dfs.client.failover.proxy.provider.{{ nsid.0 }}</name>
     <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
   </property>
+{% endfor %}
 {% if hdfs_ha %}
   <property>
     <name>dfs.namenode.shared.edits.dir</name>
-    <value>qjournal://{{ journal_quorum }}/{{ nameservice_id }}</value>
+    <value>qjournal://{% for host in curr_ns['journalnode'] %}{{ host }}:8485{% if not loop.last %};{% endif %}{% endfor %}/{{ nameservice_id }}</value>
   </property>
   <property>
     <name>dfs.ha.fencing.methods</name>

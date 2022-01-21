@@ -32,11 +32,11 @@
   </property>
   <property>
     <name>instance.volumes</name>
-    <value>{{ hdfs_root }}/accumulo</value>
+    <value>{{ accumulo_hdfs_roots }}</value>
   </property>
   <property>
     <name>instance.zookeeper.host</name>
-    <value>{{ zookeeper_connect }}</value>
+    <value>{{ accumulo_zookeeper_connect }}</value>
   </property>
   <property>
     <name>table.durability</name>

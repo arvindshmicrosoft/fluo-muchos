@@ -22,6 +22,7 @@ import time
 from os import path
 from sys import exit
 from os import listdir
+from yaml import dump
 
 
 class ExistingCluster:
@@ -75,6 +76,17 @@ class ExistingCluster:
             if config.has_service("elkserver"):
                 print("- import_playbook: elk.yml", file=site_file)
 
+        # prep to write out the HDFS namespace mappings
+        hdfs_ns_mapping = self.config._get_hdfs_volume_mapping()
+
+        # the difference between unfiltered_ns_mapping and hdfs_ns_mapping is
+        # that hdfs_ns_mapping filters out "namespaces" which do not have an
+        # associated namenode. unfiltered_ns_mapping has all "namespaces"
+        # including those which do not have namenode(s) - this is potentially
+        # used for cases where we have placeholder "namespaces" just containing
+        # (let's say) Zookeeper nodes just for Accumulo usage
+        unfiltered_ns_mapping = self.config._get_unfiltered_namespace_mapping()
+
         ansible_conf = path.join(config.deploy_path, "ansible/conf")
         with open(path.join(ansible_conf, "hosts"), "w") as hosts_file:
             print(
@@ -96,12 +108,9 @@ class ExistingCluster:
             for rm_host in config.get_service_hostnames("resourcemanager"):
                 print(rm_host, file=hosts_file)
             if config.has_service("spark"):
-                print(
-                    "\n[spark]\n{0}".format(
-                        config.get_service_hostnames("spark")[0]
-                    ),
-                    file=hosts_file,
-                )
+                print("\n[spark]", file=hosts_file)
+                for spark_host in config.get_service_hostnames("spark"):
+                    print(spark_host, file=hosts_file)
             if config.has_service("mesosmaster"):
                 print(
                     "\n[mesosmaster]\n{0}".format(
@@ -162,6 +171,25 @@ class ExistingCluster:
                 file=hosts_file,
             )
 
+            # write out the primary namenode for each HDFS namespace
+            print("\n[primarynamenode]", file=hosts_file)
+            for nn_host in self.config._get_primary_node_for_role("namenode"):
+                print(nn_host, file=hosts_file)
+
+            # write out the primary YARN resource manager for each namespace
+            print("\n[primaryrm]", file=hosts_file)
+            for nn_host in self.config._get_primary_node_for_role(
+                "resourcemanager"
+            ):
+                print(nn_host, file=hosts_file)
+
+            # write out the groups representing each HDFS namespace
+            # these groups are named in the form hdfs_ns_{nameservice_id}
+            for ns, members in unfiltered_ns_mapping.items():
+                print("\n[hdfs_ns_{0}]".format(ns), file=hosts_file)
+                for tmp_host in members["hosts"]:
+                    print("{0}".format(tmp_host), file=hosts_file)
+
             print("\n[nodes]", file=hosts_file)
             for (private_ip, hostname) in config.get_private_ip_hostnames():
                 print(
@@ -185,6 +213,28 @@ class ExistingCluster:
         ) as play_vars_file:
             for (name, value) in sorted(play_vars.items()):
                 print("{0}: {1}".format(name, value), file=play_vars_file)
+
+            print(dump(hdfs_ns_mapping), file=play_vars_file)
+            print(
+                dump({"all_nameservices": self.config.all_nameservices}),
+                file=play_vars_file,
+            )
+
+        # write out the Ansible group_vars for each HDFS namespace
+        # the group vars files are named in the form hdfs_ns_{nameservice_id}
+        for ns, members in unfiltered_ns_mapping.items():
+            with open(
+                path.join(
+                    config.deploy_path,
+                    "ansible/group_vars/hdfs_ns_{0}".format(ns),
+                ),
+                "w",
+            ) as group_vars_file:
+                for var_name, var_value in members["group_vars"].items():
+                    print(
+                        "{0}: {1}".format(var_name, var_value),
+                        file=group_vars_file,
+                    )
 
         # copy keys file to ansible/conf (if it exists)
         conf_keys = path.join(config.deploy_path, "conf/keys")

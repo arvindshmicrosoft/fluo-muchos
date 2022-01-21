@@ -84,7 +84,7 @@
   {% endif %}
   <property>
     <name>yarn.log.server.url</name>
-    <value>http://{{ groups['resourcemanager'][0] }}:19888/jobhistory/logs</value>
+    <value>http://{{ hdfs_volume_mapping[nameservice_id].resourcemanager[0] }}:19888/jobhistory/logs</value>
   </property>
   <property>
     <name>yarn.log-aggregation-enable</name>
@@ -96,7 +96,7 @@
   </property>
   <property>
     <name>yarn.log.server.web-service.url</name>
-    <value>http://{{ groups['resourcemanager'][0] }}:8188/ws/v1/applicationhistory</value>
+    <value>http://{{ hdfs_volume_mapping[nameservice_id].resourcemanager[0] }}:8188/ws/v1/applicationhistory</value>
   </property>
   <property>
     <name>yarn.nodemanager.log-aggregation.compression-type</name>
@@ -137,17 +137,17 @@
 
   <property>
     <name>yarn.resourcemanager.cluster-id</name>
-    <value>yarn-cluster</value>
+    <value>yarn-{{ nameservice_id }}</value>
   </property>
 
 {% set rm_list = [] %}
-{% for item in groups['resourcemanager'] %}{{ rm_list.append('rm' + loop.index|string() ) }}{% endfor %}
+{% for item in hdfs_volume_mapping[nameservice_id].resourcemanager %}{{ rm_list.append('rm' + loop.index|string() ) }}{% endfor %}
   <property>
     <name>yarn.resourcemanager.ha.rm-ids</name>
     <value>{{ rm_list | join(',') }}</value>
   </property>
 
-{% for rm_host in groups['resourcemanager'] %}{% set rm_id = 'rm' + loop.index|string() %}
+{% for rm_host in hdfs_volume_mapping[nameservice_id].resourcemanager %}{% set rm_id = 'rm' + loop.index|string() %}
   <property>
     <name>yarn.resourcemanager.hostname.{{ rm_id }}</name>
     <value>{{ rm_host }}</value>
@@ -227,12 +227,12 @@
 
   <property>
     <name>yarn.resourcemanager.webapp.address</name>
-    <value>{{ groups['resourcemanager'][0] }}:8088</value>
+    <value>{{ hdfs_volume_mapping[nameservice_id].resourcemanager[0] }}:8088</value>
   </property>
 
   <property>
     <name>yarn.resourcemanager.hostname</name>
-    <value>{{ groups['resourcemanager'][0] }}</value>
+    <value>{{ hdfs_volume_mapping[nameservice_id].resourcemanager[0] }}</value>
   </property>
 {% endif %}
 
