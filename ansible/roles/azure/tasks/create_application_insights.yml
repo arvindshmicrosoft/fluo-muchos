@@ -34,7 +34,7 @@
     idempotency: yes
     state: present
     body:
-      location:  "{{ location }}"
+      location: "{{ location }}"
       kind: java
       properties:
          ApplicationId: "{{ app_insights_name }}"

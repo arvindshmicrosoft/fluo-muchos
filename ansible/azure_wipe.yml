@@ -20,7 +20,7 @@
   - name: Delete container/Filesystem on ADLS Gen2
     azure_rm_storageblob:
       resource_group: "{{ resource_group }}"
-      storage_account_name:  "{{ item.split('@')[1].split('.')[0] }}"
+      storage_account_name: "{{ item.split('@')[1].split('.')[0] }}"
       container: "{{ item.split('@')[0].split('://')[1] }}"
       state: absent
       force: yes
@@ -31,7 +31,7 @@
   - name: Create container/Filesystem on ADLS Gen2
     azure_rm_storageblob:
       resource_group: "{{ resource_group }}"
-      storage_account_name:  "{{ item.split('@')[1].split('.')[0] }}"
+      storage_account_name: "{{ item.split('@')[1].split('.')[0] }}"
       container: "{{ item.split('@')[0].split('://')[1] }}"
     retries: 20
     delay: 30

@@ -26,7 +26,7 @@
 # SECTION 1: Create Azure RG, network and subnet
 #
 - name: Create a resource group
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}"
     location: "{{ location }}"
     tags:
@@ -34,7 +34,7 @@
         application: accumulo
 
 - name: Ensure that the resource group is available
-  azure_rm_resourcegroup_info:
+  azure.azcollection.azure_rm_resourcegroup_info:
     name: "{{ resource_group }}"
   retries: 5
   delay: 3

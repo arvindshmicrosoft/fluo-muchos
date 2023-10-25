@@ -18,7 +18,9 @@
 ---
 - hosts: localhost
   tasks:
-    - block:
+    - name: "Tasks for removing Azure specific components"
+      when: az_oms_integration_needed
+      block:
       - import_tasks: roles/azure/tasks/log_analytics_ws_common.yml
       - import_tasks: roles/azure/tasks/application_insights_common.yml
 
@@ -46,7 +48,7 @@
            resource_group: "{{ resource_group }}"
            provider: Portal
            resource_type: dashboards
-           resource_name:  "{{ dashboard_name }}"
+           resource_name: "{{ dashboard_name }}"
            api_version: '2019-01-01-preview'
            state: absent
 
@@ -58,14 +60,13 @@
            resource_name: "{{ log_workspace_name }}"
            api_version: '2015-03-20'
            state: absent
-      when: az_oms_integration_needed
 
     - name: Delete User Assigned Identity
       azure_rm_resource:
          resource_group: "{{ resource_group }}"
          provider: ManagedIdentity
          resource_type: userAssignedIdentities
-         resource_name:  "{{ user_assigned_identity if user_assigned_identity else vmss_name + '-ua-msi' }}"
+         resource_name: "{{ user_assigned_identity if user_assigned_identity else vmss_name + '-ua-msi' }}"
          api_version: '2018-11-30'
          state: absent
       when: use_adlsg2
@@ -73,7 +74,7 @@
     - name: Delete ADLS Gen2 storage Account
       azure_rm_storageaccount:
          resource_group: "{{ resource_group }}"
-         name:  "{{ item.split('@')[1].split('.')[0] }}"
+         name: "{{ item.split('@')[1].split('.')[0] }}"
          force_delete_nonempty: yes
          state: absent
       loop:
@@ -135,7 +136,7 @@
         vnet_facts.virtualnetworks|map(attribute='tags')|map(attribute='deployment_type')|join('') == 'muchos'
 
     - name: Delete the resource group if it is empty
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}"
         state: absent
       retries: 30

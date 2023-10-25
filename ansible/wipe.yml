@@ -110,10 +110,12 @@
     delay: 3
     until: delete_task is success
 
-- hosts: all:!{{ azure_proxy_host }}
+- hosts: all:!{{ azure_proxy_host|default("") }}
   become: yes
   tasks:
-  - block:
+  - name: "Tasks to remove ELK stack"
+    when: "'elkserver' in groups"
+    block:
     - name: remove kibana
       yum:
         name: kibana*
@@ -138,7 +140,7 @@
         path: /var/run/kibana/
         state: absent
         force: yes
-    - name: disable logstash beat
+    - name: disable logstash beat # noqa ignore-errors
       command: filebeat modules disable logstash
       ignore_errors: yes
     - name: remove filebeat
@@ -188,4 +190,3 @@
         path: /tmp/{{ elasticsearch_rpm }}
         state: absent
         force: yes
-    when: "'elkserver' in groups"
