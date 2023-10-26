@@ -40,12 +40,12 @@
   when: numnodes > 100
 
 - name: Create Scale Set
-  community.azure.azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     name: "{{ vmss_name }}"
     vm_size: "{{ vm_sku }}"
-    priority: "{{ vmss_priority | default('Regular') }}"
+    priority: "{{ vmss_priority | default('None') }}"
     admin_username: "{{ cluster_user }}"
     ssh_password_enabled: false
     ssh_public_keys:

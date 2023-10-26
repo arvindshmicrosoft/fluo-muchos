@@ -35,6 +35,9 @@ is_installed_ansible="rpm -q --quiet ansible"
 install_ansible="sudo yum install -q -y ansible"
 for i in {1..10}; do ($is_installed_ansible || $install_ansible) && break || sleep 15; done
 
+# install ansible.posix collection
+ansible-galaxy collection install ansible.posix
+
 # setup user-specific ansible configuration
 if [[ ! -h ~/.ansible.cfg ]]; then
   cd ~/
