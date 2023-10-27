@@ -31,6 +31,14 @@
     name: azure_multiple_vmss_vars
 
 - name: Create Scale Set
+  vars:
+    image_offer: "{{ azure_image_reference.split('|')[0] }}"
+    image_publisher: "{{ azure_image_reference.split('|')[1] }}"
+    image_sku: "{{ azure_image_reference.split('|')[2] }}"
+    image_version: "{{ azure_image_reference.split('|')[3] }}"
+    image_id: "{{ azure_image_reference.split('|')[4] }}"
+    accnet_capable: "{{ True if item.sku in accnet_capable_skus else False }}"
+    osdisk_sku: "{{ 'Premium_LRS' if item.sku in premiumio_capable_skus else 'Standard_LRS' }}"
   azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
@@ -57,6 +65,10 @@
       sku: "{{ image_sku if image_sku else omit }}"
       version: "{{ image_version if image_version else omit }}"
       id: "{{ image_id if image_id else omit }}"
+    # plan:
+    #    name: "{{ image_sku if image_sku else omit }}"
+    #    product: "{{ image_offer if image_offer else omit }}"
+    #    publisher: "{{ image_publisher if image_publisher else omit }}"
     data_disks: |
       {%- set data_disks = [] -%}
       {%- for lun in range(item.data_disk_count) -%}
@@ -66,14 +78,6 @@
     custom_data: "{{ lookup('file', 'cloud-init.yml') }}"
   with_items:
     - "{{ azure_multiple_vmss_vars.vars_list }}"
-  vars:
-    image_offer: "{{ azure_image_reference.split('|')[0] }}"
-    image_publisher: "{{ azure_image_reference.split('|')[1] }}"
-    image_sku: "{{ azure_image_reference.split('|')[2] }}"
-    image_version: "{{ azure_image_reference.split('|')[3] }}"
-    image_id: "{{ azure_image_reference.split('|')[4] }}"
-    accnet_capable: "{{ True if item.sku in accnet_capable_skus else False }}"
-    osdisk_sku: "{{ 'Premium_LRS' if item.sku in premiumio_capable_skus else 'Standard_LRS' }}"
   register: _create_clusters
   async: 600
   poll: 0
