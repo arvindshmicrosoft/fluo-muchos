@@ -52,18 +52,5 @@ if [[ ! -h /etc/ansible/hosts ]]; then
   sudo ln -s $base_dir/conf/hosts hosts
 fi
 
-# install lxml as it is a dependency for the maven_artifact Ansible module
-centos_version=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-centos_version=${centos_version%.*}
-if [[ $os_id = "centos" || $os_id = "almalinux" || $os_id = "rocky" ]]; then
-  if [[ $centos_version -eq 7 ]]; then
-     sudo yum install -q -y python-lxml
-  elif [[ $centos_version -eq 8 ]]; then
-     sudo yum install -q -y python3-lxml
-  fi
-elif [[ $os_id = "fedora" ]]; then
-  sudo yum install -q -y python3-lxml
-fi
-
 # install jq to ease JSON parsing on the proxy
 sudo yum install -y jq
