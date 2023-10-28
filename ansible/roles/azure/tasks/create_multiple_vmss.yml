@@ -30,6 +30,14 @@
     file: "{{ deploy_path }}/conf/azure_multiple_vmss_vars.yml"
     name: azure_multiple_vmss_vars
 
+- name: "Create image plan related facts"
+  set_fact:
+    azure_image_plan_name: "{{ azure_image_plan.split('|')[0] }}"
+    azure_image_plan_dict:
+      name: "{{ azure_image_plan.split('|')[0] }}"
+      product: "{{ azure_image_plan.split('|')[1] }}"
+      publisher: "{{ azure_image_plan.split('|')[2] }}"
+
 - name: Create Scale Set
   vars:
     image_offer: "{{ azure_image_reference.split('|')[0] }}"
@@ -65,10 +73,7 @@
       sku: "{{ image_sku if image_sku else omit }}"
       version: "{{ image_version if image_version else omit }}"
       id: "{{ image_id if image_id else omit }}"
-    # plan:
-    #    name: "{{ image_sku if image_sku else omit }}"
-    #    product: "{{ image_offer if image_offer else omit }}"
-    #    publisher: "{{ image_publisher if image_publisher else omit }}"
+    plan: "{{ azure_image_plan_dict if azure_image_plan_name else omit }}"
     data_disks: |
       {%- set data_disks = [] -%}
       {%- for lun in range(item.data_disk_count) -%}
