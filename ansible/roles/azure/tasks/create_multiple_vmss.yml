@@ -107,8 +107,8 @@
   async: 600
   poll: 0
 
-- name: "Get VMSS nic list" # noqa syntax-check[specific]
-  azure_rm_virtualmachinescaleset_nic_list_facts:
+- name: "Get VMSS nic list"
+  azure.azcollection.azure_rm_vmssnetworkinterface_info:
     resource_group: "{{ resource_group }}"
     vmss_name: "{{ vmss_name }}-{{ item.name_suffix }}"
   register: _vmss_nic_list
@@ -150,9 +150,10 @@
       {%- endfor -%}
       {%- set vmid_ips = {} -%}
       {%- for vmss in vmss_nic_list.results -%}
-      {%- for interface in vmss.networkinterfaces -%}
-      {%- if interface.virtualMachine is defined -%}
-      {%- set _ = vmid_ips.__setitem__(interface.virtualMachine.id, interface.ipConfigurations[0].privateIPAddress) -%}
+      {%- for interface in vmss_nic_list.vmss_networkinterfaces -%}
+      {%- if interface.id is defined -%}
+      {%- set vmid = "/".join(interface.id.split("/")[0:11]) -%}
+      {%- set _ = vmid_ips.__setitem__(vmid, interface.ip_configurations[0].private_ip_address) -%}
       {%- endif -%}
       {%- endfor -%}
       {%- endfor -%}

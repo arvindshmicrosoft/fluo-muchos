@@ -105,8 +105,8 @@
      state: directory
      recurse: yes
 
-- name: "Get VMSS nic list" # noqa syntax-check[specific]
-  azure_rm_virtualmachinescaleset_nic_list_facts:
+- name: "Get VMSS nic list"
+  azure.azcollection.azure_rm_vmssnetworkinterface_info:
     resource_group: "{{ resource_group }}"
     vmss_name: "{{ vmss_name }}"
   register: vmss_nic_list
@@ -123,9 +123,10 @@
       {%- set _ = vmid_names.__setitem__(instance.id, instance.name.replace('_','-')) -%}
       {%- endfor -%}
       {%- set vmid_ips = {} -%}
-      {%- for interface in vmss_nic_list.networkinterfaces -%}
-      {%- if interface.virtualMachine is defined -%}
-      {%- set _ = vmid_ips.__setitem__(interface.virtualMachine.id, interface.ipConfigurations[0].privateIPAddress) -%}
+      {%- for interface in vmss_nic_list.vmss_networkinterfaces -%}
+      {%- if interface.id is defined -%}
+      {%- set vmid = "/".join(interface.id.split("/")[0:11]) -%}
+      {%- set _ = vmid_ips.__setitem__(vmid, interface.ip_configurations[0].private_ip_address) -%}
       {%- endif -%}
       {%- endfor -%}
       {%- for vmid in vmid_names -%}
